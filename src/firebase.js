@@ -2,6 +2,9 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase } from 'firebase/database';
 import { getStorage } from 'firebase/storage';
+import { getAuth, updatePassword } from "firebase/auth";
+import { getMessaging } from 'firebase/messaging';
+
 
 
 // TODO: Add SDKs for Firebase products that you want to use
@@ -24,5 +27,8 @@ const app = initializeApp(firebaseConfig);
 
 const db = getDatabase(app);
 const storage = getStorage(app);
+const auth = getAuth(app)
+const messaging = getMessaging(app);
 
-export { db, storage};
+
+export { db, storage, auth, messaging, updatePassword};
