@@ -196,6 +196,7 @@ function Chat() {
       const messagesRef = ref(db, 'messages');
       await push(messagesRef, {
         user: userName,
+        imageUrl: imageUrl,
         text: newMessage,
         timestamp: new Date().toISOString(),
         uid: auth.currentUser.uid, // Adicione o UID do usuário aqui
