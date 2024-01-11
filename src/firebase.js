@@ -2,8 +2,9 @@
 import { initializeApp } from "firebase/app";
 import { getDatabase } from 'firebase/database';
 import { getStorage } from 'firebase/storage';
-import { getAuth, updatePassword } from "firebase/auth";
+import { getAuth } from "firebase/auth";
 import { getMessaging } from 'firebase/messaging';
+import { getAnalytics } from "firebase/analytics";
 
 
 
@@ -29,6 +30,6 @@ const db = getDatabase(app);
 const storage = getStorage(app);
 const auth = getAuth(app)
 const messaging = getMessaging(app);
+const analytics = getAnalytics(app);
 
-
-export { db, storage, auth, messaging, updatePassword};
+export { db, storage, auth, messaging, analytics};

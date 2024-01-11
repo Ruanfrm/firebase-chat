@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import {toast} from 'react-toastify'
 import {
   AppBar,
   Toolbar,
@@ -46,6 +47,7 @@ export default function Navbar() {
           } else {
             // Handle the case where the user is not signed in
             setError("User not signed in");
+            toast.error("Usuário não conectado")
           }
         } catch (error) {
           setError(error.message);
@@ -64,19 +66,22 @@ export default function Navbar() {
       try {
         await auth.signOut();
         setConfirmLogoutOpen(false);
+        toast.success("Logout efetuado com sucesso")
       } catch (error) {
         setError(error.message);
+        toast.error("Error ao sair da conta")
       }
     };
 
   return (
     <ThemeProvider theme={defaultTheme}>
-      <AppBar position="static">
+      <AppBar position="static" style={{borderRadius: '.3rem'}}>
         <Toolbar>
           <Typography variant="h6" component="div" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
           Suporte chat
         <PhoneMissedIcon fontSize="Medium" style={{ marginLeft: "1rem" }} />
           </Typography>
+          
           <Button color="inherit" onClick={handleOpenChangePassword} style={{fontSize: '14px'}} >
             <LockIcon style={{fontSize: '16px', marginRight: "3px"}} />
             Mudar Senha

@@ -20,7 +20,7 @@ const Footer = () => {
       <br/>
       <Box component="span" marginRight={1}>
         <Link
-          href="https://wa.me/SEU_NUMERO"
+          href="https://wa.me/88981558151"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -29,7 +29,7 @@ const Footer = () => {
       </Box>{" "}
       <Box component="span" marginRight={1}>
         <Link
-          href="https://www.instagram.com/SEU_INSTAGRAM/"
+          href="https://www.instagram.com/ruan.fr"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -38,7 +38,7 @@ const Footer = () => {
       </Box>{" "}
       <Box component="span">
         <Link
-          href="https://github.com/SEU_USUARIO_GITHUB"
+          href="https://github.com/Ruanfrm"
           target="_blank"
           rel="noopener noreferrer"
         >

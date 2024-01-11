@@ -7,6 +7,7 @@ import { auth } from "../firebase";
 import { useNavigate } from 'react-router-dom'
 import ForgotPasswordModal from "../components/ForgotPasswordModal"; // Importe o componente modal aqui
 import ParticleEffect from "../components/ParticleEffect"
+import ReactGA from 'react-ga';
 
 
 const defaultTheme = createTheme();
@@ -61,7 +62,7 @@ export default function SignIn() {
           <Avatar sx={{ m: 1, bgcolor: 'secondary.main' }}>
             <LockOutlinedIcon />
           </Avatar>
-          <Typography component="h1" variant="h5" >
+          <Typography component="h1" variant="h5" style={{color: '#000'}} >
             Login
           </Typography>
           <form onSubmit={handleSubmit}>
@@ -92,6 +93,7 @@ export default function SignIn() {
             <FormControlLabel
               control={<Checkbox value="remember" color="primary" />}
               label="Lembrar"
+              style={{color: '#000'}}
             />
             <Button
               type="submit"
@@ -106,12 +108,12 @@ export default function SignIn() {
           <Grid container>
             <Grid item xs>
               {/* Abra o modal de "Esqueceu a senha?" ao clicar no link */}
-              <Link component="button" variant="body2" onClick={() => setForgotPasswordOpen(true)}>
+              <Link component="button" variant="body2" onClick={() => setForgotPasswordOpen(true)} style={{textDecoration: 'none'}}>
                 Esqueceu a senha?
               </Link>
             </Grid>
               <Grid item> 
-              <Link component="button" variant="body2" onClick={() => handleCreateAccount()} >
+              <Link component="button" variant="body2" onClick={() => handleCreateAccount()} style={{textDecoration: 'none'}} >
                 Ainda nao possui conta?
               </Link>
               </Grid>
@@ -126,4 +128,7 @@ export default function SignIn() {
     </ThemeProvider>
     
   );
+  ReactGA.pageview(window.location.pathname + window.location.search);
+
 }
+

@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
+import ReactGA from "react-ga";
+import { toast } from "react-toastify";
 import { ref, onValue, push, remove } from "firebase/database";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  signOut,
+} from "firebase/auth";
 import {
   getStorage,
   ref as storageRef,
@@ -7,7 +14,7 @@ import {
   uploadBytes,
 } from "firebase/storage";
 
-import { db, storage } from "../firebase";
+import { db, storage, auth } from "../firebase";
 import {
   Container,
   Paper,
@@ -21,6 +28,9 @@ import {
   Backdrop,
   Fade,
   CircularProgress,
+  SpeedDial,
+  SpeedDialIcon,
+  SpeedDialAction,
 } from "@mui/material";
 import { formatDistanceToNow } from "date-fns";
 import SendIcon from "@mui/icons-material/Send";
@@ -29,6 +39,8 @@ import ReplyIcon from "@mui/icons-material/Reply";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import PhoneMissedIcon from "@mui/icons-material/PhoneMissed";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
+import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 
 import Footer from "./Footer";
 import Navbar from "./Navbar";
@@ -47,7 +59,11 @@ function Chat() {
   const [respondedMessage, setRespondedMessage] = useState(null);
   const [isSending, setIsSending] = useState(false);
   const [lastDisplayedMessage, setLastDisplayedMessage] = useState(null);
-
+  const [open, setOpen] = useState(false);
+  const [isCreateAccountModalOpen, setIsCreateAccountModalOpen] =
+    useState(false);
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [newUserPassword, setNewUserPassword] = useState("");
 
   useEffect(() => {
     const storedName = localStorage.getItem("userName");
@@ -88,6 +104,8 @@ function Chat() {
         ) {
           const lastMessage = messagesArray[messagesArray.length - 1];
           showNotification(lastMessage);
+          toast.success(`Você tem uma nova mensagem de ${lastMessage.user}`);
+
           localStorage.setItem("lastDisplayedMessageId", lastMessage.id);
         }
       }
@@ -174,25 +192,25 @@ function Chat() {
         // Obter a URL da imagem no Firebase Storage
         const imageUrl = await getDownloadURL(imageStorageRef);
 
-        // Salvar informações da imagem no Firebase Realtime Database ou Firestore
-        const messagesRef = ref(db, "messages");
-
-        await push(messagesRef, {
-          user: userName,
-          imageUrl: imageUrl,
-          text: newMessage, // Adiciona a mensagem de texto junto com a imagem
-          timestamp: new Date().toISOString(),
-        });
+        // Adicione o UID do usuário ao documento da mensagem
+      const messagesRef = ref(db, 'messages');
+      await push(messagesRef, {
+        user: userName,
+        text: newMessage,
+        timestamp: new Date().toISOString(),
+        uid: auth.currentUser.uid, // Adicione o UID do usuário aqui
+      });
 
         setSelectedFile(null); // Limpa o arquivo selecionado
       } else {
         // Se não houver imagem, apenas envie a mensagem de texto
         if (newMessage.trim() !== "") {
-          const messagesRef = ref(db, "messages");
+          const messagesRef = ref(db, 'messages');
           await push(messagesRef, {
             user: userName,
             text: newMessage,
             timestamp: new Date().toISOString(),
+            uid: auth.currentUser.uid, // Adicione o UID do usuário aqui
           });
         }
       }
@@ -200,14 +218,11 @@ function Chat() {
       setNewMessage("");
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
+      toast.error("Erro ao enviar mensagem")
     } finally {
       setIsSending(false); // Desativar o estado de envio, independentemente do resultado
     }
   };
-
-
-  
-
 
   const deleteAllMessages = async () => {
     if (
@@ -215,15 +230,50 @@ function Chat() {
     ) {
       await remove(ref(db, "messages"));
       setMessages([]);
+      toast.success("Mensagens deletadas");
     }
   };
 
+  const user = auth.currentUser;
+  const uid = user.uid;
 
-  
+  const actions = [
+    {
+      icon: <DeleteForeverIcon />,
+      name: "Excluir Todas as Mensagens",
+      onClick: deleteAllMessages,
+    },
+  ];
+
+  const createAccount = async () => {
+    try {
+      await createUserWithEmailAndPassword(auth, newUserEmail, newUserPassword);
+      // Lógica adicional, se necessário
+      setIsCreateAccountModalOpen(false);
+      toast.success("Usuário criado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao criar conta:", error);
+      toast.error("Error ao criar novo usuário");
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await auth.signOut();
+      toast.success("Logout efetuado com sucesso");
+    } catch (error) {
+      toast.error("Error ao sair da conta");
+    }
+  };
+  const handleDeleteMessage = async (messageId) => {
+    if (window.confirm("Tem certeza de que deseja excluir esta mensagem?")) {
+      await remove(ref(db, `messages/${messageId}`));
+    }
+  };
 
   return (
-    <Container component="main" maxWidth="sm">
-      <Navbar/>
+    <Container component="main" maxWidth="xl" style={{ maxWidth: "800px" }}>
+      <Navbar />
       <Paper
         elevation={3}
         style={{
@@ -268,7 +318,7 @@ function Chat() {
                   backgroundColor: "#ffffff",
                 }}
               >
-                {messages.map((message, index) => (
+                {messages.map((message, index ) => (
                   <div
                     key={message.id}
                     ref={index === messages.length - 1 ? lastMessageRef : null}
@@ -319,12 +369,26 @@ function Chat() {
                       >
                         {formatTimestamp(message.timestamp)} - {message.user}
                       </Typography>
+                      <div 
+                      style={{
+                        display: "flex",
+                      }}
+                      >
                       <IconButton
                         size="small"
                         onClick={() => setReplyTo(message)}
                       >
                         <ReplyIcon />
                       </IconButton>
+                      {message.uid === auth.currentUser.uid && (
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteMessage(message.id)}
+                        >
+                          <DeleteForeverIcon />
+                        </IconButton>
+                      )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -338,17 +402,6 @@ function Chat() {
                 marginTop: "20px",
               }}
             >
-              {messages.length > 0 && (
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  startIcon={<DeleteForeverIcon />}
-                  onClick={deleteAllMessages}
-                  style={{ position: "fixed", bottom: "10px", right: "10px" }}
-                >
-                  Excluir Todas as Mensagens
-                </Button>
-              )}
               {messages.length > 0 && (
                 <Button
                   variant="outlined"
@@ -432,19 +485,25 @@ function Chat() {
           <Fade in={isNameModalOpen}>
             <div
               style={{
-                backgroundColor: "#ffffff",
+                backgroundColor: "#f5f5f5",
                 padding: "20px",
                 borderRadius: "5px",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
+                marginTop: "1rem",
+                maxWidth: "400px",
+                marginLeft: "1rem",
               }}
             >
-              <Typography variant="h5" style={{ marginBottom: "20px" }}>
+              <Typography
+                variant="h5"
+                style={{ marginBottom: "20px", color: "#000" }}
+              >
                 Bem-vindo ao Chat! 😊
               </Typography>
               <TextField
-                label="Digite seu nome"
+                label="Digite seu nome para iniciar uma conversa"
                 variant="outlined"
                 fullWidth
                 value={userName}
@@ -462,9 +521,106 @@ function Chat() {
           </Fade>
         </Modal>
       </Paper>
+      {uid === "d8k8w75XpWRTL90RkeN2zUDWJUj1" && (
+        <SpeedDial
+          ariaLabel="SpeedDial"
+          sx={{ position: "fixed", bottom: 16, right: 16 }}
+          icon={<SpeedDialIcon />}
+          onClose={() => setOpen(false)}
+          onOpen={() => setOpen(true)}
+          open={open}
+        >
+          {messages.length > 0 && (
+            <SpeedDialAction
+              key="delete"
+              icon={<DeleteForeverIcon />}
+              tooltipTitle="Excluir Todas as Mensagens"
+              onClick={deleteAllMessages}
+            />
+          )}
+
+          {/* Adicionando a ação de criar um novo usuário */}
+          <SpeedDialAction
+            key="createUser"
+            icon={<PersonAddIcon />}
+            tooltipTitle="Criar Novo Usuário"
+            onClick={() => setIsCreateAccountModalOpen(true)}
+          />
+
+          {/* Adicionando a ação de fazer logout */}
+          {user && (
+            <SpeedDialAction
+              key="logout"
+              icon={<ExitToAppIcon />}
+              tooltipTitle="Logout"
+              onClick={logout}
+            />
+          )}
+        </SpeedDial>
+      )}
+
+      <Modal
+        open={isCreateAccountModalOpen}
+        onClose={() => setIsCreateAccountModalOpen(false)}
+        closeAfterTransition
+        BackdropComponent={Backdrop}
+        BackdropProps={{ timeout: 500 }}
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          bgcolor: "#f5f5f5",
+          color: "#000",
+          boxShadow: 10,
+          p: 4,
+          borderRadius: "1rem",
+        }}
+      >
+        <Fade in={isCreateAccountModalOpen}>
+          <div
+            sx={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+              color: "#000",
+              p: 4,
+              borderRadius: "1rem",
+            }}
+          >
+            <Typography variant="h5" style={{ marginBottom: "20px" }}>
+              Criar Conta
+            </Typography>
+            <TextField
+              label="E-mail"
+              type="email"
+              variant="outlined"
+              fullWidth
+              value={newUserEmail}
+              onChange={(e) => setNewUserEmail(e.target.value)}
+              style={{ marginBottom: "20px" }}
+            />
+            <TextField
+              label="Senha"
+              type="password"
+              variant="outlined"
+              fullWidth
+              value={newUserPassword}
+              onChange={(e) => setNewUserPassword(e.target.value)}
+              style={{ marginBottom: "20px" }}
+            />
+            <Button variant="contained" color="primary" onClick={createAccount}>
+              Criar Conta
+            </Button>
+          </div>
+        </Fade>
+      </Modal>
+
       <Footer />
     </Container>
   );
+  ReactGA.pageview(window.location.pathname + window.location.search);
 }
 
 export default Chat;

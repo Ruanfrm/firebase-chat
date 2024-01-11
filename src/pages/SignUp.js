@@ -5,6 +5,9 @@ import { createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/aut
 import { auth } from "../firebase";
 import { useNavigate } from 'react-router-dom';
 import ParticleEffect from "../components/ParticleEffect";
+import { toast } from "react-toastify";
+import ReactGA from 'react-ga';
+
 
 const defaultTheme = createTheme();
 
@@ -21,6 +24,7 @@ export default function SignUp() {
       if (user) {
         // Usuário está autenticado, redirecione para a página /chat
         navigate("/chat", { replace: true });
+
       }
     });
 
@@ -33,6 +37,7 @@ export default function SignUp() {
 
     if (password !== confirmPassword) {
       setError("As senhas não coincidem");
+      toast.error("As senhas não coincidem")
       return;
     }
 
@@ -40,8 +45,10 @@ export default function SignUp() {
       await createUserWithEmailAndPassword(auth, email, password);
       // Usuário criado com sucesso, redireciona para a página desejada
       navigate("/chat");
+      toast.success("Usuário criado com sucesso, seja bem-vindo!")
     } catch (error) {
       setError(error.message);
+      toast.error(`Error ao criar usuário tente novamente! ou entre em contato com o ADM`)
     }
   };
 
@@ -54,6 +61,7 @@ export default function SignUp() {
     <ThemeProvider theme={defaultTheme}>
       <ParticleEffect/>
       <Container component="main" maxWidth="xs" style={{ marginTop: '3rem', background: '#f5f5f5', padding: '2rem', borderRadius: '1rem', color: '#fff' }}>
+        <Typography variant="h4" style={{color: '#000', textAlign: 'center'}}>Criar Conta</Typography>
         <CssBaseline />
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
          
@@ -118,4 +126,6 @@ export default function SignUp() {
       </Container>
     </ThemeProvider>
   );
+  ReactGA.pageview(window.location.pathname + window.location.search);
+
 }
