@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {toast} from 'react-toastify'
 import {
   AppBar,
@@ -18,8 +18,8 @@ import { auth, updatePassword, signOut } from "../firebase";
 import { reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
 
 
-import PhoneMissedIcon from "@mui/icons-material/PhoneMissed";
-
+import EditIcon from '@mui/icons-material/Edit';
+import SaveAsIcon from '@mui/icons-material/SaveAs';
 
 const defaultTheme = createTheme();
 
@@ -28,7 +28,34 @@ export default function Navbar() {
     const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
     const [newPassword, setNewPassword] = useState("");
     const [error, setError] = useState(null);
+    const [userName, setUserName] = useState("");
+    const [editMode, setEditMode] = useState(false);
+    const [editedName, setEditedName] = useState('');
+
+
+    useEffect(() => {
+      const storedName = localStorage.getItem("userName");
+      if (storedName) {
+        setUserName(storedName);
+      } else {
+        console.error("Error ao carregar nome do usuário");
+      }
+    }, []);
   
+    const handleEditClick = () => {
+      setEditedName(userName);
+      setEditMode(true);
+    };
+  
+    const handleSaveClick = () => {
+      localStorage.setItem("userName", editedName);
+      setUserName(editedName);
+      setEditMode(false);
+    };
+
+    
+
+
     const handleOpenChangePassword = () => {
       setChangePasswordOpen(true);
     };
@@ -77,10 +104,19 @@ export default function Navbar() {
     <ThemeProvider theme={defaultTheme}>
       <AppBar position="static" style={{borderRadius: '.3rem'}}>
         <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
-          Suporte chat
-        <PhoneMissedIcon fontSize="Medium" style={{ marginLeft: "1rem" }} />
-          </Typography>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+      {editMode ? (
+        <>
+          <input type="text" value={editedName} onChange={(e) => setEditedName(e.target.value)} style={{padding: '.3rem .5rem', borderRadius: '.3rem', border: '0px'}} />
+          <SaveAsIcon onClick={handleSaveClick} style={{padding: '.3rem .5rem', fontSize: '2.8rem'}}/>
+        </>
+      ) : (
+        <>
+          Olá {userName}
+          <EditIcon fontSize="Medium" style={{ marginLeft: "1rem" }} onClick={handleEditClick} />
+        </>
+      )}
+    </Typography>
           
           <Button color="inherit" onClick={handleOpenChangePassword} style={{fontSize: '14px'}} >
             <LockIcon style={{fontSize: '16px', marginRight: "3px"}} />

@@ -11,6 +11,9 @@ import SignIn from "./pages/SignIn";
 import Privete from "./routes/privete" 
 import Chat from "./components/Chat"
 import SignUp from './pages/SignUp';
+import Terms from './pages/Terms';
+import Politics from './pages/Politics';
+import Error404 from './pages/Error404'
 
 
 const router = createBrowserRouter([
@@ -26,7 +29,18 @@ const router = createBrowserRouter([
     path: "/chat",
     element: <Privete><Chat/></Privete>,
   },
-  
+  {
+    path: "/terms",
+    element: <Terms/>,
+  },
+  {
+    path: "/politics",
+    element: <Politics/>,
+  },
+  {
+    path: "*",
+    element: <Error404/>,
+  },
  
 ]);
 

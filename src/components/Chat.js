@@ -1,7 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import ReactGA from "react-ga";
 import { toast } from "react-toastify";
-import { ref, onValue, push, remove } from "firebase/database";
+import EmojiPicker from 'emoji-picker-react';
+import AddReactionIcon from '@mui/icons-material/AddReaction';
+import {
+  ref,
+  set,
+  onValue,
+  push,
+  remove,
+  orderByChild,
+  equalTo,
+  query,
+  get,
+} from "firebase/database";
 import {
   getAuth,
   createUserWithEmailAndPassword,
@@ -44,10 +56,14 @@ import ExitToAppIcon from "@mui/icons-material/ExitToApp";
 
 import Footer from "./Footer";
 import Navbar from "./Navbar";
+import PrivateChatModal from "./PrivateChatModal";
+import UserList from "../components/UserList";
+import WelcomeModal from "./WelcomeModal";
 
 function Chat() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
 
   const [replyTo, setReplyTo] = useState(null);
@@ -64,6 +80,11 @@ function Chat() {
     useState(false);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [newUserPassword, setNewUserPassword] = useState("");
+  const [isPrivateChatModalOpen, setIsPrivateChatModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [isCreateUserModalOpen, setIsCreateUserModalOpen] = useState(false);
+  const [newUserName, setNewUserName] = useState("");
 
   useEffect(() => {
     const storedName = localStorage.getItem("userName");
@@ -113,6 +134,7 @@ function Chat() {
 
     return () => unsubscribe();
   }, []);
+
 
   const showNotification = (message) => {
     if ("Notification" in window) {
@@ -170,17 +192,26 @@ function Chat() {
     loadMessages();
   }, []);
 
+  
+  const handleEmojiClick = (emojiData, event) => {
+    // Atualiza o estado newMessage com o emoji selecionado
+    setNewMessage((prevMessage) => prevMessage + emojiData.emoji);
+    // Oculta o EmojiPicker
+    setShowEmojiPicker(false);
+  };
+
+
   const sendMessage = async (e) => {
     e.preventDefault();
-
+  
     if (!userName) {
       setIsNameModalOpen(true);
       return;
     }
-
+  
     try {
       setIsSending(true); // Ativar o estado de envio
-
+  
       if (selectedFile) {
         // Enviar a imagem para o Firebase Storage
         const imageStorageRef = storageRef(
@@ -188,25 +219,27 @@ function Chat() {
           `images/${selectedFile.name}`
         );
         await uploadBytes(imageStorageRef, selectedFile);
-
+  
         // Obter a URL da imagem no Firebase Storage
         const imageUrl = await getDownloadURL(imageStorageRef);
-
+  
         // Adicione o UID do usuário ao documento da mensagem
-      const messagesRef = ref(db, 'messages');
-      await push(messagesRef, {
-        user: userName,
-        imageUrl: imageUrl,
-        text: newMessage,
-        timestamp: new Date().toISOString(),
-        uid: auth.currentUser.uid, // Adicione o UID do usuário aqui
-      });
-
+        const messagesRef = ref(db, "messages");
+  
+        await push(messagesRef, {
+          user: userName,
+          imageUrl: imageUrl,
+          text: newMessage,
+          timestamp: new Date().toISOString(),
+          uid: auth.currentUser.uid, // Adicione o UID do usuário aqui
+        });
+  
         setSelectedFile(null); // Limpa o arquivo selecionado
       } else {
         // Se não houver imagem, apenas envie a mensagem de texto
         if (newMessage.trim() !== "") {
-          const messagesRef = ref(db, 'messages');
+          const messagesRef = ref(db, "messages");
+  
           await push(messagesRef, {
             user: userName,
             text: newMessage,
@@ -215,15 +248,17 @@ function Chat() {
           });
         }
       }
-
-      setNewMessage("");
+  
+      setNewMessage(""); // Limpar o campo de mensagem
+  
     } catch (error) {
       console.error("Erro ao enviar mensagem:", error);
-      toast.error("Erro ao enviar mensagem")
+      toast.error("Erro ao enviar mensagem");
     } finally {
       setIsSending(false); // Desativar o estado de envio, independentemente do resultado
     }
   };
+  
 
   const deleteAllMessages = async () => {
     if (
@@ -272,9 +307,21 @@ function Chat() {
     }
   };
 
+  const handleCreateUser = () => {
+    // Implemente a lógica para criar um novo usuário com o nome fornecido
+    // Use o uid do usuário autenticado como parte do documento do usuário
+    const user = auth.currentUser;
+    const uid = user.uid;
+
+    const userRef = ref(db, `users/${uid}`);
+    set(userRef, { name: newUserName }); // Use a função set do Firebase
+    setIsCreateUserModalOpen(false);
+  };
+
   return (
     <Container component="main" maxWidth="xl" style={{ maxWidth: "800px" }}>
       <Navbar />
+      <WelcomeModal/>
       <Paper
         elevation={3}
         style={{
@@ -298,12 +345,7 @@ function Chat() {
         )}
         {!loadingMessages && (
           <>
-            {showWelcomeMessage && (
-              <Alert severity="success" style={{ marginBottom: "10px" }}>
-                <AlertTitle>Bem-vindo, {userName}!</AlertTitle>
-                Comece a conversar abaixo.
-              </Alert>
-            )}
+          
             {messages.length === 0 ? (
               <Alert severity="info">
                 <AlertTitle>Nenhuma mensagem</AlertTitle>
@@ -312,14 +354,14 @@ function Chat() {
             ) : (
               <div
                 style={{
-                  height: "300px",
+                  height: "400px",
                   overflowY: "scroll",
                   border: "1px solid #ccc",
                   padding: "10px",
                   backgroundColor: "#ffffff",
                 }}
               >
-                {messages.map((message, index ) => (
+                {messages.map((message, index) => (
                   <div
                     key={message.id}
                     ref={index === messages.length - 1 ? lastMessageRef : null}
@@ -370,25 +412,25 @@ function Chat() {
                       >
                         {formatTimestamp(message.timestamp)} - {message.user}
                       </Typography>
-                      <div 
-                      style={{
-                        display: "flex",
-                      }}
+                      <div
+                        style={{
+                          display: "flex",
+                        }}
                       >
-                      <IconButton
-                        size="small"
-                        onClick={() => setReplyTo(message)}
-                      >
-                        <ReplyIcon />
-                      </IconButton>
-                      {message.uid === auth.currentUser.uid && (
                         <IconButton
                           size="small"
-                          onClick={() => handleDeleteMessage(message.id)}
+                          onClick={() => setReplyTo(message)}
                         >
-                          <DeleteForeverIcon />
+                          <ReplyIcon />
                         </IconButton>
-                      )}
+                        {message.uid === auth.currentUser.uid && (
+                          <IconButton
+                            size="small"
+                            onClick={() => handleDeleteMessage(message.id)}
+                          >
+                            <DeleteForeverIcon />
+                          </IconButton>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -419,54 +461,68 @@ function Chat() {
             </div>
           </>
         )}
-        <form
-          onSubmit={sendMessage}
-          style={{ marginTop: "20px", display: "flex" }}
-        >
-          <TextField
-            variant="outlined"
-            fullWidth
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            placeholder={
-              replyTo
-                ? `Respondendo à mensagem de ${replyTo.user}`
-                : "Digite sua mensagem"
-            }
-            style={{ marginRight: "3px" }}
-            size="small"
+         <form onSubmit={sendMessage} style={{ marginTop: '20px', display: 'flex' }}>
+        <TextField
+          variant="outlined"
+          fullWidth
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
+          placeholder={
+            replyTo
+              ? `Respondendo à mensagem de ${replyTo.user}`
+              : 'Digite sua mensagem'
+          }
+          style={{ marginRight: '3px' }}
+          size="small"
+        />
+        <label htmlFor="file-input">
+          <input
+            type="file"
+            id="file-input"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
           />
-          <label htmlFor="file-input">
-            <input
-              type="file"
-              id="file-input"
-              accept="image/*"
-              style={{ display: "none" }}
-              onChange={handleFileChange}
-            />
-            <IconButton component="span" color="primary">
-              <PhotoCameraIcon />
-            </IconButton>
-          </label>
+          <IconButton component="span" color="primary">
+            <PhotoCameraIcon />
+          </IconButton>
+        </label>
 
-          <Button
-            type="submit"
-            disabled={isSending}
-            onClick={sendMessage}
-            variant="contained"
-            color="primary"
-            endIcon={<SendIcon />}
-            style={{
-              backgroundColor: "#4caf50",
-              color: "#ffffff",
-              paddingLeft: "1rem",
-              paddingRight: "1rem",
-            }}
-            size="small"
-          >
-            {isSending ? "Enviando..." : "Enviar"}
-          </Button>
-        </form>
+        <IconButton component="span" color="primary">
+
+      <AddReactionIcon onClick={() => setShowEmojiPicker(!showEmojiPicker)}/>
+      
+      {showEmojiPicker && (
+        <EmojiPicker
+          onEmojiClick={handleEmojiClick}
+          style={{
+            position: 'absolute',
+            bottom: '50px', // Ajuste a posição conforme necessário
+            right: '50px', // Ajuste a posição conforme necessário
+            zIndex: 1000, // Certifique-se de que o z-index seja maior do que outros elementos na página
+          }}
+        />
+      )}
+        </IconButton>
+
+        <Button
+          type="submit"
+          disabled={isSending}
+          onClick={sendMessage}
+          variant="contained"
+          color="primary"
+          endIcon={<SendIcon />}
+          style={{
+            backgroundColor: '#4caf50',
+            color: '#ffffff',
+            paddingLeft: '1rem',
+            paddingRight: '1rem',
+          }}
+          size="small"
+        >
+          {isSending ? 'Enviando...' : 'Enviar'}
+        </Button>
+      </form>
         {replyTo && (
           <Typography variant="caption" style={{ marginTop: "10px" }}>
             Respondendo à mensagem de {formatTimestamp(replyTo.timestamp)} por{" "}
@@ -560,38 +616,33 @@ function Chat() {
         </SpeedDial>
       )}
 
-      <Modal
+<Modal
         open={isCreateAccountModalOpen}
         onClose={() => setIsCreateAccountModalOpen(false)}
         closeAfterTransition
         BackdropComponent={Backdrop}
         BackdropProps={{ timeout: 500 }}
         sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          bgcolor: "#f5f5f5",
-          color: "#000",
-          boxShadow: 10,
-          p: 4,
-          borderRadius: "1rem",
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#fff', 
+          color: '#000'
         }}
       >
         <Fade in={isCreateAccountModalOpen}>
           <div
             sx={{
-              position: "absolute",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              color: "#000",
-              p: 4,
-              borderRadius: "1rem",
+              backgroundColor: '#fff',
+              boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+              borderRadius: '8px',
+              padding: '32px',
+              width: '300px',
+              outline: 'none',
             }}
           >
-            <Typography variant="h5" style={{ marginBottom: "20px" }}>
-              Criar Conta
+            <Typography variant="h5" gutterBottom>
+              Criar nova conta
             </Typography>
             <TextField
               label="E-mail"
@@ -600,7 +651,7 @@ function Chat() {
               fullWidth
               value={newUserEmail}
               onChange={(e) => setNewUserEmail(e.target.value)}
-              style={{ marginBottom: "20px" }}
+              style={{ marginBottom: '20px' }}
             />
             <TextField
               label="Senha"
@@ -609,7 +660,7 @@ function Chat() {
               fullWidth
               value={newUserPassword}
               onChange={(e) => setNewUserPassword(e.target.value)}
-              style={{ marginBottom: "20px" }}
+              style={{ marginBottom: '20px' }}
             />
             <Button variant="contained" color="primary" onClick={createAccount}>
               Criar Conta

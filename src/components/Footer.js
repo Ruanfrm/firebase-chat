@@ -1,50 +1,99 @@
-// Footer.js
 import React from "react";
-import { Typography, Link, Box } from "@mui/material";
+import { Typography, Link, Box } from "@mui/material/";
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import GitHubIcon from "@mui/icons-material/GitHub";
+import logo from "../imagens/logo2-removebg.png";
 
 const Footer = () => {
   return (
     <footer
       style={{
-        marginTop: "20px",
-        textAlign: "center",
-        backgroundColor: "#f8f9fa",
-        padding: "10px",
-        marginBottom: '3rem'
+        marginTop: "auto",
+        padding: "20px",
+        backgroundColor: "#f0f0f0",
+        color: "#000",
+        marginTop: "1rem",
       }}
     >
-      <h1 className="title-footer">Feito com ❤️ por Ruan Freire  </h1>
-      <br/>
-      <Box component="span" marginRight={1}>
+      <Typography
+        variant="subtitle1"
+        align="center"
+        color="textSecondary"
+        component="p"
+      >
+        © {new Date().getFullYear()} Todos os direitos reservados
+      </Typography>
+
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginTop: "1rem",
+        }}
+      >
+        <Box component="span" marginRight={1}>
+          <Link
+            href="https://wa.me/88981558151"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <WhatsAppIcon />
+          </Link>
+        </Box>{" "}
+        <Box component="span" marginRight={1}>
+          <Link
+            href="https://www.instagram.com/ruan.fr"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <InstagramIcon />
+          </Link>
+        </Box>{" "}
+        <Box component="span">
+          <Link
+            href="https://github.com/Ruanfrm"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <GitHubIcon />
+          </Link>
+        </Box>
+      </div>
+      <div
+        style={{ display: "flex", justifyContent: "center", marginTop: "20px" }}
+      >
         <Link
-          href="https://wa.me/88981558151"
-          target="_blank"
-          rel="noopener noreferrer"
+          className="footer-link"
+          href="/terms"
+          color="inherit"
+          style={{ margin: "0 10px", textDecoration: "none" }}
         >
-          <WhatsAppIcon />
+          Termos de Uso
         </Link>
-      </Box>{" "}
-      <Box component="span" marginRight={1}>
         <Link
-          href="https://www.instagram.com/ruan.fr"
-          target="_blank"
-          rel="noopener noreferrer"
+          className="footer-link"
+          href="/politics"
+          color="inherit"
+          style={{ margin: "0 10px", textDecoration: "none" }}
         >
-          <InstagramIcon />
+          Política de Privacidade
         </Link>
-      </Box>{" "}
-      <Box component="span">
-        <Link
-          href="https://github.com/Ruanfrm"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <GitHubIcon />
-        </Link>
-      </Box>
+      </div>
+      <div className="logo-back">
+        {" "}
+        <img
+          src={logo}
+          alt="Logo"
+          style={{
+            width: "200px",
+            height: "auto",
+            marginBottom: "10px",
+            marginTop: '10px'
+          }}
+        />
+      </div>
     </footer>
   );
 };

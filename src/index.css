@@ -35,3 +35,15 @@ body {
 footer {
   border-radius: .2rem;
 }
+
+.footer-link:hover {
+ color: #596166
+} 
+
+.logo-back {
+  position: absolute;
+  top: 2rem;
+  left: 5rem;
+  background-color: #f5f5f5;
+  border-radius: 40% 60% 33% 67% / 79% 34% 66% 21%  ;
+}

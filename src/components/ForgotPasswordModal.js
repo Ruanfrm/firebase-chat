@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { auth } from "../firebase";
+import {toast} from 'react-toastify'
 
 export default function ForgotPasswordModal({ open, onClose }) {
   const [email, setEmail] = useState("");
@@ -12,9 +13,11 @@ export default function ForgotPasswordModal({ open, onClose }) {
     try {
       await sendPasswordResetEmail(auth, email);
       setEmailSent(true);
+      toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada e span")
       setError(null);
     } catch (error) {
       setError(error.message);
+      toast.error("Error ao enviar e-mail")
     }
   };
 
