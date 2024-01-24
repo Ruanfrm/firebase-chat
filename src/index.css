@@ -47,3 +47,19 @@ footer {
   background-color: #f5f5f5;
   border-radius: 40% 60% 33% 67% / 79% 34% 66% 21%  ;
 }
+
+/* Media query para telas pequenas (por exemplo, smartphones) */
+@media only screen and (max-width: 1320px) {
+  .logo-back {
+    display: none;
+  }
+ 
+}
+
+@media only screen and (max-width: 600px) {
+  .emogi {
+    max-width: 300px;
+  }
+ 
+}
+

@@ -1,41 +1,51 @@
+// No seu componente UserList.js:
 import React, { useState, useEffect } from "react";
-import { ref, onValue, get } from "firebase/database";
-import { auth, db } from "../firebase";
-import {Typography, Button, } from '@mui/material'
-import { startPrivateChat } from './Chat';
+import { ref, onValue } from "firebase/database";
+import { Container, Typography, List, ListItem, ListItemText, Button } from "@mui/material";
+import { db } from "../firebase";
 
-
-const UserList = ({ startPrivateChat }) => {
+function UserList({ startPrivateChat }) {
   const [users, setUsers] = useState([]);
 
   useEffect(() => {
     const usersRef = ref(db, "users");
+    const unsubscribe = onValue(usersRef, (snapshot) => {
+      const userData = snapshot.val();
 
-    onValue(usersRef, (snapshot) => {
-      const data = snapshot.val();
-      if (data) {
-        const usersArray = Object.entries(data).map(([uid, user]) => ({
+      if (userData) {
+        const userList = Object.keys(userData).map((uid) => ({
           uid,
-          ...user,
+          ...userData[uid],
         }));
-        setUsers(usersArray);
+
+        setUsers(userList);
       }
     });
+
+    return () => unsubscribe();
   }, []);
 
   return (
-    <div>
-      <h2>Lista de Usuários</h2>
-      <ul>
+    <Container>
+      <Typography variant="h5" gutterBottom>
+        Lista de Usuários Cadastrados
+      </Typography>
+      <List>
         {users.map((user) => (
-          <div key={user.uid}>
-          <Typography>{user.name}</Typography>
-          <Button onClick={() => startPrivateChat(user)}>Iniciar Chat Privado</Button>
-        </div>
+          <ListItem key={user.uid}>
+            <ListItemText primary={user.username} secondary={`UID: ${user.uid}`} />
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => startPrivateChat(user)}
+            >
+              Iniciar Chat
+            </Button>
+          </ListItem>
         ))}
-      </ul>
-    </div>
+      </List>
+    </Container>
   );
-};
+}
 
 export default UserList;

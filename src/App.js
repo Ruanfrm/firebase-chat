@@ -14,6 +14,8 @@ import SignUp from './pages/SignUp';
 import Terms from './pages/Terms';
 import Politics from './pages/Politics';
 import Error404 from './pages/Error404'
+import ChatPage from './components/ChatPage';
+
 
 
 const router = createBrowserRouter([
@@ -28,6 +30,10 @@ const router = createBrowserRouter([
   {
     path: "/chat",
     element: <Privete><Chat/></Privete>,
+  },
+  {
+    path: "/chat/:chatId",
+    element: <Privete><ChatPage/></Privete>,
   },
   {
     path: "/terms",
