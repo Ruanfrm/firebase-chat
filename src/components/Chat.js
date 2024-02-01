@@ -63,6 +63,7 @@ import UserList from "../components/UserList";
 import WelcomeModal from "./WelcomeModal";
 import PrivateChatComponent from './PrivateChatComponent'; // Importe o componente privado
 import { useNavigate } from 'react-router-dom';
+import AdBanner from "./AdBanner";
 
 
 
@@ -726,6 +727,7 @@ function Chat() {
         </Fade>
       </Modal>
 
+      <AdBanner/>
       <Footer />
     </Container>
   );

@@ -1,4 +1,4 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { Button, TextField, Avatar, CssBaseline, FormControlLabel, Checkbox, Link, Grid, Typography, Container } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
@@ -8,6 +8,8 @@ import { useNavigate } from 'react-router-dom'
 import ForgotPasswordModal from "../components/ForgotPasswordModal"; // Importe o componente modal aqui
 import ParticleEffect from "../components/ParticleEffect"
 import ReactGA from 'react-ga';
+import AdBanner from "../components/AdBanner";
+import AdsBanner from "../components/AdsBanner";
 
 
 const defaultTheme = createTheme();
@@ -51,6 +53,7 @@ export default function SignIn() {
   return (
     <ThemeProvider theme={defaultTheme} >
               <ParticleEffect/>
+              <AdBanner/>
 
       <Container component="main" maxWidth="xs" style={{marginTop: '3rem', background: '#f5f5f5', padding: '2rem', borderRadius: '1rem', color: '#fff' }}>
         <CssBaseline />
@@ -125,6 +128,8 @@ export default function SignIn() {
       {/* Renderize o modal de "Esqueceu a senha?" */}
       <ForgotPasswordModal open={forgotPasswordOpen} onClose={() => setForgotPasswordOpen(false)} />
       
+
+      <AdsBanner/>
     </ThemeProvider>
     
   );

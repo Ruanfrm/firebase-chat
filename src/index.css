@@ -48,6 +48,18 @@ footer {
   border-radius: 40% 60% 33% 67% / 79% 34% 66% 21%  ;
 }
 
+.banner-ads {
+    margin-right: 1rem;
+    margin-left: 1rem;
+    margin-top: 1px;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: #fff;
+}
+
 /* Media query para telas pequenas (por exemplo, smartphones) */
 @media only screen and (max-width: 1320px) {
   .logo-back {
